@@ -9,10 +9,11 @@ class Script(object):
     id = None
     exid = None
     operationList = []
+    
     def __init__(self, scriptPath):
         # Load the script into memory
         self.scriptPath = scriptPath
-        self.xml = etree.parse(self.scriptpath)
+        self.xml = etree.parse(self.scriptPath)
         self.id = self.xml.find("Script").get("id")
         self.exid = self.xml.find("Script").get("ExID")
         
@@ -28,8 +29,10 @@ class Script(object):
                 self.operationList.append(Operation.TracerouteOperation(operation[1]))
             else:
                 raise DimesExceptions.ScriptParseException("Unknown operation: %s" % operation[0])
-        
+        print "Loaded script %s, %d operations to run" % (self.scriptPath, len(self.operationList))
         
     def execute(self):
         """Executes the loaded script"""
-        print self.xml.find("Script").text
+        for operation in self.operationList:
+            operation.run()
+        return True
