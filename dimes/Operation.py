@@ -52,7 +52,7 @@ class PingOperation(Operation):
     CommandType = "PING"
     def do(self):
         self._start()
-        delay = Ping.do_one(self.DestIP)
+        responses = [Ping.do_one(self.DestIP, Config.config.getint("Performance", "ICMPTimeout")) for _ in range(4)]
         if delay != None:
             Log.log("Response time for %s is %s seconds" % (self.DestIP, delay))
 

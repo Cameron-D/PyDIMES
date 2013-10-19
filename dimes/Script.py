@@ -1,5 +1,6 @@
 from lxml import etree
 from util import Log
+from util import Config
 import DimesExceptions, threading, Operation, Worker, Queue
 
 class Script(object):
@@ -37,7 +38,7 @@ class Script(object):
         
     def execute(self):
         """Executes the loaded script"""
-        for i in range(64):
+        for i in range(Config.config.getint("Performance", "ParallelWorkers")):
             w = Worker.Worker(self)
             w.setDaemon(True)
             w.start()
