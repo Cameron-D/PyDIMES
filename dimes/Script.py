@@ -1,6 +1,5 @@
 import DimesExceptions
 import Operation
-from switch import switch
 from lxml import etree
 
 class Script:
