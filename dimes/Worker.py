@@ -1,6 +1,6 @@
-import threading, time
-import Script
 from util import Log
+import threading, time, Script
+
 
 class Worker(threading.Thread):
     operation = None
@@ -12,10 +12,13 @@ class Worker(threading.Thread):
     def run(self):
         while(not self.script.operationQ.empty()):
             # Fetch an operation from the queue
-            self.script.operationQlock.acquire()
             operation = self.script.operationQ.get()
-            self.script.operationQlock.release()
-            operation.do()
-            self.script.operationQlock.acquire()
+            
+            # Execute it!
+            result = operation.do()
+            
+            # Add it onto the result queue
+            
+            # Mark it as complete
             operation = self.script.operationQ.task_done()
-            self.script.operationQlock.release()
+        return

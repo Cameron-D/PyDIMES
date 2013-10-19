@@ -1,14 +1,13 @@
 from datetime import datetime
-from util import Log
 from util import Ping
+from util import Log
+from util import Config
 import socket
 
 class Operation(object):
     script = None
     
     # All the values a script is required to return
-    ExID = None
-    ScriptID = None
     Priority = "NORMAL"
     ScriptLineNum = -1
     StartTime = None
@@ -54,7 +53,8 @@ class PingOperation(Operation):
     def do(self):
         self._start()
         delay = Ping.do_one(self.DestIP)
-        Log.log("Response time for %s is %s seconds" % (self.DestIP, delay))
+        if delay != None:
+            Log.log("Response time for %s is %s seconds" % (self.DestIP, delay))
 
 
 

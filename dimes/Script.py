@@ -1,10 +1,6 @@
-import DimesExceptions
-import Operation
-import Queue
-import Worker
-import threading
-from util import Log
 from lxml import etree
+from util import Log
+import DimesExceptions, threading, Operation, Worker, Queue
 
 class Script(object):
     """This class is responsible for the execution of a single DIMES script"""
@@ -14,6 +10,7 @@ class Script(object):
     exid = None
     operationQ = Queue.Queue()
     operationQlock = threading.Lock()
+    operationResults = []
     
     def __init__(self, scriptPath):
         # Load the script into memory
@@ -36,11 +33,11 @@ class Script(object):
                 raise DimesExceptions.ScriptParseException("Unknown operation: %s in script %s, PLEASE REPORT THIS!" %
                                                            (operation[0], self.scriptPath))
             self.operationQ.put(op)
-        Log.log("Loaded script %s, %d operations to run" % (self.scriptPath, self.operationQ.qsize()))
+        Log.log("Loaded script %s, %d operations to run" % (self.scriptPath, self.operationQ.qsize()), 1)
         
     def execute(self):
         """Executes the loaded script"""
-        for i in range(16):
+        for i in range(64):
             w = Worker.Worker(self)
             w.setDaemon(True)
             w.start()
