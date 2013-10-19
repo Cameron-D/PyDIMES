@@ -74,17 +74,17 @@
    $Rev: $
    $Author: $
 """
- 
+
 import time
 import socket
 import struct
 import select
 import random
 import asyncore
- 
+
 # From /usr/include/linux/icmp.h; your milage may vary.
 ICMP_ECHO_REQUEST = 8 # Seems to be the same on Solaris.
- 
+
 ICMP_CODE = socket.getprotobyname('icmp')
 ERROR_DESCR = {
 	1: ' - Note that ICMP messages can only be '
@@ -92,49 +92,49 @@ ERROR_DESCR = {
 	10013: ' - Note that ICMP messages can only be sent by'
 		   ' users or processes with administrator rights.'
 	}
- 
+
 __all__ = ['create_packet', 'do_one', 'verbose_ping', 'PingQuery',
 		   'multi_ping_query']
- 
- 
+
+
 def checksum(source_string):
 	# I'm not too confident that this is right but testing seems to
 	# suggest that it gives the same answers as in_cksum in ping.c.
-	sum = 0
+	chksum = 0
 	count_to = (len(source_string) / 2) * 2
 	count = 0
 	while count < count_to:
 		this_val = ord(source_string[count + 1])*256+ord(source_string[count])
-		sum = sum + this_val
-		sum = sum & 0xffffffff # Necessary?
+		chksum = chksum + this_val
+		chksum = chksum & 0xffffffff # Necessary?
 		count = count + 2
 	if count_to < len(source_string):
-		sum = sum + ord(source_string[len(source_string) - 1])
-		sum = sum & 0xffffffff # Necessary?
-	sum = (sum >> 16) + (sum & 0xffff)
-	sum = sum + (sum >> 16)
-	answer = ~sum
+		chksum = chksum + ord(source_string[len(source_string) - 1])
+		chksum = chksum & 0xffffffff # Necessary?
+	chksum = (chksum >> 16) + (chksum & 0xffff)
+	chksum = chksum + (chksum >> 16)
+	answer = ~chksum
 	answer = answer & 0xffff
 	# Swap bytes. Bugger me if I know why.
 	answer = answer >> 8 | (answer << 8 & 0xff00)
 	return answer
- 
- 
-def create_packet(id):
-	"""Create a new echo request packet based on the given "id"."""
-	# Header is type (8), code (8), checksum (16), id (16), sequence (16)
-	header = struct.pack('bbHHh', ICMP_ECHO_REQUEST, 0, 0, id, 1)
+
+
+def create_packet(pid):
+	"""Create a new echo request packet based on the given "pid"."""
+	# Header is type (8), code (8), checksum (16), pid (16), sequence (16)
+	header = struct.pack('bbHHh', ICMP_ECHO_REQUEST, 0, 0, pid, 1)
 	data = 192 * 'Q'
 	# Calculate the checksum on the data and the dummy header.
 	my_checksum = checksum(header + data)
 	# Now that we have the right checksum, we put that in. It's just easier
 	# to make up a new header than to stuff it into the dummy.
 	header = struct.pack('bbHHh', ICMP_ECHO_REQUEST, 0,
-						 socket.htons(my_checksum), id, 1)
+						 socket.htons(my_checksum), pid, 1)
 	return header + data
- 
- 
-def do_one(dest_addr, timeout=1):
+
+
+def do_one(dest_addr, timeout=5):
 	"""
    Sends one ping to the given "dest_addr" which can be an ip or hostname.
    "timeout" can be any integer or float except negatives and zero.
@@ -166,8 +166,8 @@ def do_one(dest_addr, timeout=1):
 	delay = receive_ping(my_socket, packet_id, time.time(), timeout)
 	my_socket.close()
 	return delay
- 
- 
+
+
 def receive_ping(my_socket, packet_id, time_sent, timeout):
 	# Receive the ping from the socket.
 	time_left = timeout
@@ -187,8 +187,8 @@ def receive_ping(my_socket, packet_id, time_sent, timeout):
 		time_left -= time_received - time_sent
 		if time_left <= 0:
 			return
- 
- 
+
+
 def verbose_ping(dest_addr, timeout=2, count=4):
 	"""
    Sends one ping to the given "dest_addr" which can be an ip or hostname.
@@ -208,8 +208,8 @@ def verbose_ping(dest_addr, timeout=2, count=4):
 			delay = round(delay * 1000.0, 4)
 			print 'get ping in {} milliseconds.'.format(delay)
 	print
- 
- 
+
+
 class PingQuery(asyncore.dispatcher):
 	def __init__(self, host, p_id, timeout=0.5, ignore_errors=False):
 		"""
@@ -251,10 +251,10 @@ class PingQuery(asyncore.dispatcher):
 			# If it does not care whether an error occured or not.
 			self.handle_error = self.do_not_handle_errors
 			self.handle_expt = self.do_not_handle_errors
-   
+
 	def writable(self):
 		return self.time_sent == 0
-   
+
 	def handle_write(self):
 		self.time_sent = time.time()
 		while self.packet:
@@ -262,7 +262,7 @@ class PingQuery(asyncore.dispatcher):
 			# below expects it, so we just give it a dummy port.
 			sent = self.sendto(self.packet, (self.host, 1))
 			self.packet = self.packet[sent:]
-   
+
 	def readable(self):
 		# As long as we did not sent anything, the channel has to be left open.
 		if (not self.writable()
@@ -274,7 +274,7 @@ class PingQuery(asyncore.dispatcher):
 		# If the channel should not be closed, we do not want to read something
 		# until we did not sent anything.
 		return not self.writable()
-   
+
 	def handle_read(self):
 		read_time = time.time()
 		packet, addr = self.recvfrom(1024)
@@ -285,20 +285,20 @@ class PingQuery(asyncore.dispatcher):
 			# the replies for their own sent packets.
 			self.time_received = read_time
 			self.close()
-   
+
 	def get_result(self):
 		"""Return the ping delay if possible, otherwise None."""
 		if self.time_received > 0:
 			return self.time_received - self.time_sent
-   
+
 	def get_host(self):
 		"""Return the host where to the request has or should been sent."""
 		return self.host
-   
+
 	def do_not_handle_errors(self):
 		# Just a dummy handler to stop traceback printing, if desired.
 		pass
-   
+
 	def create_socket(self, family, type, proto):
 		# Overwritten, because the original does not support the "proto" arg.
 		sock = socket.socket(family, type, proto)
@@ -307,19 +307,19 @@ class PingQuery(asyncore.dispatcher):
 		# Part of the original but is not used. (at least at python 2.7)
 		# Copied for possible compatiblity reasons.
 		self.family_and_type = family, type
-   
+
 	# If the following methods would not be there, we would see some very
 	# "useful" warnings from asyncore, maybe. But we do not want to, or do we?
 	def handle_connect(self):
 		pass
-   
+
 	def handle_accept(self):
 		pass
-   
+
 	def handle_close(self):
 		self.close()
- 
- 
+
+
 def multi_ping_query(hosts, timeout=1, step=512, ignore_errors=False):
 	"""
    Sends multiple icmp echo requests at once.

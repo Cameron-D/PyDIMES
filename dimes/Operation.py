@@ -1,8 +1,11 @@
 from datetime import datetime
 from util import Log
+from util import Ping
 import socket
 
 class Operation(object):
+    script = None
+    
     # All the values a script is required to return
     ExID = None
     ScriptID = None
@@ -21,7 +24,8 @@ class Operation(object):
     reachedDest = False
     Exceptions = ""
     
-    def __init__(self, address):
+    def __init__(self, script, address):
+        self.script = script
         self.DestIP = address
 
     def do(self):
@@ -42,13 +46,20 @@ class Operation(object):
     
     def output(self):
         raise NotImplementedError()
-        
+
+
+
 class PingOperation(Operation):
     CommandType = "PING"
     def do(self):
         self._start()
-    
+        delay = Ping.do_one(self.DestIP)
+        Log.log("Response time for %s is %sms" % (self.DestIP, delay))
+
+
+
 class TracerouteOperation(Operation):
     CommandType = "TRACEROUTE"
     def do(self):
         self._start()
+        

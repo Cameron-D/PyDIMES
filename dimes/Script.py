@@ -29,9 +29,9 @@ class Script(object):
                 continue
             operation = operation.split()
             if operation[0] == "PING":
-                op = Operation.PingOperation(operation[1])
+                op = Operation.PingOperation(self, operation[1])
             elif operation[0] == "TRACEROUTE":
-                op = Operation.TracerouteOperation(operation[1])
+                op = Operation.TracerouteOperation(self, operation[1])
             else:
                 raise DimesExceptions.ScriptParseException("Unknown operation: %s" % operation[0])
             self.operationQ.put(op)
