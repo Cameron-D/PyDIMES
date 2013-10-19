@@ -1,4 +1,5 @@
-from dimes.Script import Script
-
-script = Script("default_script.xml")
+from dimes import Script
+from util import Log
+    
+script = Script.Script("default_script.xml")
 script.execute()

@@ -1,8 +1,8 @@
 from datetime import datetime
-import threading
+from util import Log
 import socket
 
-class Operation(threading.Thread):
+class Operation(object):
     # All the values a script is required to return
     ExID = None
     ScriptID = None
@@ -22,18 +22,19 @@ class Operation(threading.Thread):
     Exceptions = ""
     
     def __init__(self, address):
-        threading.Thread.__init__(self)
         self.DestIP = address
 
-    # 'Pythonic' abstraction...
-    def run(self):
+    def do(self):
         raise NotImplementedError()
     
     def _start(self):
         # Some common tasks that need to be done when an operation starts
-        print "Executing %s to address %s" % (self.CommandType, self.DestIP)
+        Log.log("Executing %s to address %s" % (self.CommandType, self.DestIP))
         # Reverse DNS
-        self.DestAddress = socket.gethostbyaddr(self.DestIP)[0]
+        try:
+            self.DestAddress = socket.gethostbyaddr(self.DestIP)[0]
+        except socket.herror:
+            self.DestAddress = self.DestIP
         
         # Current time
         self.StartTime = str(datetime.utcnow()).strip("0")
@@ -44,8 +45,10 @@ class Operation(threading.Thread):
         
 class PingOperation(Operation):
     CommandType = "PING"
-    def run(self):
+    def do(self):
         self._start()
     
 class TracerouteOperation(Operation):
     CommandType = "TRACEROUTE"
+    def do(self):
+        self._start()

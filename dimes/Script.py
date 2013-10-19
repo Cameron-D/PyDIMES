@@ -1,5 +1,9 @@
 import DimesExceptions
 import Operation
+import Queue
+import Worker
+import threading
+from util import Log
 from lxml import etree
 
 class Script(object):
@@ -8,7 +12,8 @@ class Script(object):
     xml = None
     id = None
     exid = None
-    operationList = []
+    operationQ = Queue.Queue()
+    operationQlock = threading.Lock()
     
     def __init__(self, scriptPath):
         # Load the script into memory
@@ -24,15 +29,17 @@ class Script(object):
                 continue
             operation = operation.split()
             if operation[0] == "PING":
-                self.operationList.append(Operation.PingOperation(operation[1]))
+                op = Operation.PingOperation(operation[1])
             elif operation[0] == "TRACEROUTE":
-                self.operationList.append(Operation.TracerouteOperation(operation[1]))
+                op = Operation.TracerouteOperation(operation[1])
             else:
                 raise DimesExceptions.ScriptParseException("Unknown operation: %s" % operation[0])
-        print "Loaded script %s, %d operations to run" % (self.scriptPath, len(self.operationList))
+            self.operationQ.put(op)
+        Log.log("Loaded script %s, %d operations to run" % (self.scriptPath, self.operationQ.qsize()))
         
     def execute(self):
         """Executes the loaded script"""
-        for operation in self.operationList:
-            operation.run()
+        for i in range(16):
+            w = Worker.Worker(self)
+            w.start()
         return True
