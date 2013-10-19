@@ -2,7 +2,7 @@ import DimesExceptions
 import Operation
 from lxml import etree
 
-class Script:
+class Script(object):
     """This class is responsible for the execution of a single DIMES script"""
     scriptPath = None
     xml = None
@@ -23,9 +23,9 @@ class Script:
                 continue
             operation = operation.split()
             if operation[0] == "PING":
-                print "PING %s" % operation[1]
+                self.operationList.append(Operation.PingOperation(operation[1]))
             elif operation[0] == "TRACEROUTE":
-                print "TRACEROUTE %s" % operation[1]
+                self.operationList.append(Operation.TracerouteOperation(operation[1]))
             else:
                 raise DimesExceptions.ScriptParseException("Unknown operation: %s" % operation[0])
         
