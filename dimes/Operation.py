@@ -54,12 +54,13 @@ class PingOperation(Operation):
     def do(self):
         self._start()
         delay = Ping.do_one(self.DestIP)
-        Log.log("Response time for %s is %sms" % (self.DestIP, delay))
+        Log.log("Response time for %s is %s seconds" % (self.DestIP, delay))
 
 
 
 class TracerouteOperation(Operation):
     CommandType = "TRACEROUTE"
     def do(self):
-        self._start()
+        #self._start()
+        return True
         

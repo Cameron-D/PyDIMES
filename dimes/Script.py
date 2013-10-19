@@ -33,7 +33,8 @@ class Script(object):
             elif operation[0] == "TRACEROUTE":
                 op = Operation.TracerouteOperation(self, operation[1])
             else:
-                raise DimesExceptions.ScriptParseException("Unknown operation: %s" % operation[0])
+                raise DimesExceptions.ScriptParseException("Unknown operation: %s in script %s, PLEASE REPORT THIS!" %
+                                                           (operation[0], self.scriptPath))
             self.operationQ.put(op)
         Log.log("Loaded script %s, %d operations to run" % (self.scriptPath, self.operationQ.qsize()))
         
@@ -41,5 +42,6 @@ class Script(object):
         """Executes the loaded script"""
         for i in range(16):
             w = Worker.Worker(self)
+            w.setDaemon(True)
             w.start()
         return True
