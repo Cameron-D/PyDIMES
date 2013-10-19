@@ -1,0 +1,2 @@
+class ScriptParseException(Exception):
+    pass

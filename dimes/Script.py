@@ -1,13 +1,36 @@
+import DimesExceptions
+import Operation
+from switch import switch
 from lxml import etree
-from lxml import objectify
 
 class Script:
     """This class is responsible for the execution of a single DIMES script"""
-    def __init__(self, scriptpath):
-        # Load the script
-        xml = etree.parse(scriptpath)
-        self.id = xml.find("Script").get("id")
-        self.exid = xml.find("Script").get("ExID")
+    scriptPath = None
+    xml = None
+    id = None
+    exid = None
+    operationList = []
+    def __init__(self, scriptPath):
+        # Load the script into memory
+        self.scriptPath = scriptPath
+        self.xml = etree.parse(self.scriptpath)
+        self.id = self.xml.find("Script").get("id")
+        self.exid = self.xml.find("Script").get("ExID")
         
-    def dostuff(self):
-        print self.id
+        # Parse the script operations
+        operations = self.xml.find("Script").text.splitlines()
+        for operation in operations:
+            if len(operation) == 0:
+                continue
+            operation = operation.split()
+            if operation[0] == "PING":
+                print "PING %s" % operation[1]
+            elif operation[0] == "TRACEROUTE":
+                print "TRACEROUTE %s" % operation[1]
+            else:
+                raise DimesExceptions.ScriptParseException("Unknown operation: %s" % operation[0])
+        
+        
+    def execute(self):
+        """Executes the loaded script"""
+        print self.xml.find("Script").text
