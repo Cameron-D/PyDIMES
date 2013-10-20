@@ -15,9 +15,11 @@ class Worker(threading.Thread):
             operation = self.script.operationQ.get()
             
             # Execute it!
-            result = operation.do()
+            operation.do()
             
-            # Add it onto the result queue
+            # Store results
+            result = operation.getResult()
+            self.script.resultQ.put(result)
             
             # Mark it as complete
             operation = self.script.operationQ.task_done()

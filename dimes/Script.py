@@ -11,7 +11,7 @@ class Script(object):
     exid = None
     operationQ = Queue.Queue()
     operationQlock = threading.Lock()
-    operationResults = []
+    resultQ = Queue.Queue()
     
     def __init__(self, scriptPath):
         # Load the script into memory
