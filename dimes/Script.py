@@ -1,7 +1,7 @@
 from lxml import etree
 from util import Log
 from util import Config
-import DimesExceptions, threading, Operation, Worker, Queue
+import Exceptions, threading, Operation, Worker, Queue
 
 class Script(object):
     """This class is responsible for the execution of a single DIMES script"""
