@@ -1,4 +1,4 @@
-import time, socket, random, select, struct, Operation
+import time, socket, select, struct, Operation
 from util import ICMP
 from util import Config
 from util import PacketSequence
@@ -66,7 +66,6 @@ class PingOperation(Operation.Operation):
         while True:
             started_select = time.time()
             ready = select.select([my_socket], [], [], time_left)
-            how_long_in_select = time.time() - started_select
             if ready[0] == []: # Timeout
                 return
             time_received = time.time()
