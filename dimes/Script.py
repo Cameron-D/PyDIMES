@@ -1,7 +1,8 @@
 from lxml import etree
 from util import Log
 from util import Config
-import Exceptions, threading, Operation, PingOperation, TracerouteOperation, Worker, Queue
+import threading, time
+import Exceptions, PingOperation, TracerouteOperation, Worker, Queue
 
 class Script(object):
     """This class is responsible for the execution of a single DIMES script"""
@@ -42,4 +43,6 @@ class Script(object):
             w = Worker.Worker(self)
             w.setDaemon(True)
             w.start()
+            time.sleep(Config.config.getint("Performance", "ThreadStartDelay") / 1000.0)
+            
         return True
