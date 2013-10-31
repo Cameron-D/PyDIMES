@@ -1,9 +1,7 @@
 from datetime import datetime
-from util import Ping
 from util import Log
 from util import Config
 from util import IP
-import socket, time
 
 class Operation(object):
     script = None

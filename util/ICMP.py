@@ -75,12 +75,8 @@
    $Author: $
 """
 
-import time
 import socket
 import struct
-import select
-import random
-import asyncore
 
 # From /usr/include/linux/icmp.h; your milage may vary.
 ICMP_ECHO_REQUEST = 8 # Seems to be the same on Solaris.
@@ -132,58 +128,3 @@ def create_packet(pid):
 	header = struct.pack('bbHHh', ICMP_ECHO_REQUEST, 0,
 						 socket.htons(my_checksum), pid, 1)
 	return header + data
-
-
-def do_ping(dest_addr, timeout=5):
-	"""
-   Sends one ping to the given "dest_addr" which can be an ip or hostname.
-   "timeout" can be any integer or float except negatives and zero.
-   
-   Returns either the delay (in seconds) or None on timeout and an invalid
-   address, respectively.
-   
-   """
-	try:
-		my_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, ICMP_CODE)
-	except socket.error, (errno, msg):
-		if errno in ERROR_DESCR:
-			# Operation not permitted
-			raise socket.error(''.join((msg, ERROR_DESCR[errno])))
-		raise # raise the original error
-	try:
-		host = socket.gethostbyname(dest_addr)
-	except socket.gaierror:
-		return
-	# Maximum for an unsigned short int c object counts to 65535 so
-	# we have to sure that our packet id is not greater than that.
-	packet_id = int((id(timeout) * random.random()) % 65535)
-	packet = create_packet(packet_id)
-	while packet:
-		# The icmp protocol does not use a port, but the function
-		# below expects it, so we just give it a dummy port.
-		sent = my_socket.sendto(packet, (dest_addr, 1))
-		packet = packet[sent:]
-	delay = receive_ping(my_socket, packet_id, time.time(), timeout)
-	my_socket.close()
-	return delay
-
-
-def receive_ping(my_socket, packet_id, time_sent, timeout):
-	# Receive the ping from the socket.
-	time_left = timeout
-	while True:
-		started_select = time.time()
-		ready = select.select([my_socket], [], [], time_left)
-		how_long_in_select = time.time() - started_select
-		if ready[0] == []: # Timeout
-			return
-		time_received = time.time()
-		rec_packet, addr = my_socket.recvfrom(1024)
-		icmp_header = rec_packet[20:28]
-		type, code, checksum, p_id, sequence = struct.unpack(
-			'bbHHh', icmp_header)
-		if p_id == packet_id:
-			return time_received - time_sent
-		time_left -= time_received - time_sent
-		if time_left <= 0:
-			return
