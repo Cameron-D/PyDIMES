@@ -79,7 +79,7 @@ class PingOperation(Operation):
         detail = {}
         
         for i in range (1,4):
-            response = Ping.do_one(self.DestIP, Config.config.getint("Performance", "ICMPTimeout"))
+            response = Ping.do_ping(self.DestIP, Config.config.getint("Performance", "ICMPTimeout"))
             if response is not None:
                 responses.append(response)
                 

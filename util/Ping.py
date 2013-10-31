@@ -134,7 +134,7 @@ def create_packet(pid):
 	return header + data
 
 
-def do_one(dest_addr, timeout=5):
+def do_ping(dest_addr, timeout=5):
 	"""
    Sends one ping to the given "dest_addr" which can be an ip or hostname.
    "timeout" can be any integer or float except negatives and zero.
