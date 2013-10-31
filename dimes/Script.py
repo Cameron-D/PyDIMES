@@ -1,7 +1,7 @@
 from lxml import etree
 from util import Log
 from util import Config
-import Exceptions, threading, Operation, Worker, Queue
+import Exceptions, threading, Operation, PingOperation, TracerouteOperation, Worker, Queue
 
 class Script(object):
     """This class is responsible for the execution of a single DIMES script"""
@@ -27,11 +27,11 @@ class Script(object):
                 continue
             operation = operation.split()
             if operation[0] == "PING":
-                op = Operation.PingOperation(self, operation[1])
+                op = PingOperation.PingOperation(self, operation[1])
             elif operation[0] == "TRACEROUTE":
-                op = Operation.TracerouteOperation(self, operation[1])
+                op = TracerouteOperation.TracerouteOperation(self, operation[1])
             else:
-                raise DimesExceptions.ScriptParseException("Unknown operation: %s in script %s, PLEASE REPORT THIS!" %
+                raise Exceptions.ScriptParseException("Unknown operation: %s in script %s, PLEASE REPORT THIS!" %
                                                            (operation[0], self.scriptPath))
             self.operationQ.put(op)
         Log.log("Loaded script %s, %d operations to run" % (self.scriptPath, self.operationQ.qsize()), 1)
